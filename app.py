@@ -1,13 +1,18 @@
 import streamlit as st
+import tensorflow as tf
 import numpy as np
-import pickle
 import plotly.graph_objects as go
 from streamlit_drawable_canvas import st_canvas
 import cv2
 from scipy import ndimage
+import os
 
 # 1. 페이지 레이아웃 확장 (넓은 대시보드 모드)
 st.set_page_config(page_title="NEURAL VISION AI", page_icon="⚡", layout="wide")
+
+# 🔥 경로 자동 보정: app.py 파일이 있는 폴더 위치를 기준으로 모델 파일 경로 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'mnist_cnn_model.keras')
 
 # 🔥 디자인 개선 1: 세련된 미래형 AI 타이틀 디자인
 st.markdown("""
@@ -17,17 +22,17 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 2. 모델 로드 함수
+# 2. 모델 로드 함수 (보정된 절대 경로 사용)
 @st.cache_resource
 def load_model():
-    with open('mnist_cnn_model.pkl', 'rb') as f:
-        model = pickle.load(f)
-    return model
+    return tf.keras.models.load_model(MODEL_PATH)
 
 try:
     model = load_model()
-except:
-    st.error("⚠️ 모델 파일이 없습니다! 'python train.py'를 먼저 실행해 주세요.")
+except Exception as e:
+    st.error("⚠️ 모델 파일을 불러오지 못했습니다!")
+    st.info(f"**현재 시스템이 찾는 경로:** `{MODEL_PATH}`")
+    st.caption("해당 위치에 'mnist_cnn_model.keras' 파일이 실제로 존재하는지 다시 한번 확인해 주세요.")
     st.stop()
 
 # 🔥 디자인 개선 2: 거대했던 성능 가이드를 상단에 아주 작고 세련된 배지(Badge) 형태로 압축
@@ -81,7 +86,7 @@ with col2:
         img_input = img_resized.reshape(1, 28, 28, 1) / 255.0
         
         # 3. 모델 예측 수행
-        prediction = model.predict(img_input)[0] # 👈 끝에 [0]을 붙여서 1차원 리스트로 꺼냅니다.
+        prediction = model.predict(img_input)[0] 
         predicted_num = np.argmax(prediction)
         confidence = prediction[predicted_num] * 100
         
@@ -117,20 +122,17 @@ with col2:
         st.plotly_chart(fig, use_container_width=True)
         
     else:
-        # 🔥 디자인 개선 3: 대기 상태일 때 화면이 횡해 보이지 않도록 '신경망 레이더 시각화 그래프' 고정 배치
+        # 🔥 디자인 개선 3: 대기 상태일 때 '신경망 레이더 시각화 그래프' 고정 배치
         st.info("💡 왼쪽 캔버스에 마우스로 숫자를 그리면 인공지능 분석 연산 레이어가 실시간 활성화됩니다.")
-        
-        # 미래형 인공지능 매트릭스 레이더 그래프 연출 (Plotly Scatter)
         st.markdown("#### ⚡ 인공지능 신경망 노드 시각화 매트릭스 (Standby)")
         
-        # 멋진 거미줄/신경망 레이아웃 생성
+        # 미래형 인공지능 매트릭스 레이더 그래프 연출 (Plotly Scatter)
         np.random.seed(42)
         node_x = np.random.randn(25)
         node_y = np.random.randn(25)
         
         fig_standby = go.Figure()
         
-        # 노드 간 연결선 그리기 (테크니컬 효과)
         for i in range(len(node_x)-1):
             fig_standby.add_trace(go.Scatter(
                 x=[node_x[i], node_x[i+1]], y=[node_y[i], node_y[i+1]],
@@ -138,7 +140,6 @@ with col2:
                 hoverinfo='none', showlegend=False
             ))
             
-        # 신경망 노드 점 찍기
         fig_standby.add_trace(go.Scatter(
             x=node_x, y=node_y,
             mode='markers+text',
