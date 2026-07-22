@@ -1,6 +1,6 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
+import pickle
 import plotly.graph_objects as go
 from streamlit_drawable_canvas import st_canvas
 import cv2
@@ -20,7 +20,9 @@ st.markdown("""
 # 2. 모델 로드 함수
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model('mnist_cnn_model.keras')
+    with open('mnist_cnn_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    return model
 
 try:
     model = load_model()
